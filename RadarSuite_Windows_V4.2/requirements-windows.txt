@@ -1,0 +1,37 @@
+# RadarSuite Windows V4 - Requirements
+# Python 3.11 required
+# Platform: Windows x64
+
+# GUI Framework
+PyQt5>=5.15.0
+
+# Visualization
+pyqtgraph>=0.13.0
+
+# 3D Graphics (for 3D radar mode)
+PyOpenGL>=3.1.0
+PyOpenGL_accelerate>=3.1.0
+
+# Numerical computing
+numpy>=1.21.0
+scipy>=1.7.0
+
+# Audio capture
+sounddevice>=0.4.0
+soundcard>=0.4.0
+pyaudiowpatch>=0.2.12  # WASAPI loopback for game audio capture
+
+# System info
+psutil>=5.9.0
+
+# Build tool - UPDATED to 6.0+ for better Windows 11 support
+pyinstaller>=6.0.0
+
+# ============================================================================
+# WINDOWS NOTES
+# ============================================================================
+# - PyQt5 will install all necessary DLLs automatically via pip
+# - Some optional Qt5 libraries (Qt53D*, Qt5WebEngine) may show warnings
+#   during build but are not required for RadarSuite functionality
+# - Visual C++ Redistributable may be required on target systems
+# ============================================================================
