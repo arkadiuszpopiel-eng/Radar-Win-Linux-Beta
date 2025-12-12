@@ -137,6 +137,13 @@ RadarSuite_Windows_V4.2/
 
 ## Build Configuration
 
+### Windows path length guard (PortAudio)
+
+- Uruchamiaj komendy build/test z krótkiej ścieżki, np. `C:\\RadarSuite\\`.
+- Jeśli katalog `dist`/`build` przekroczy ~180 znaków, Windows loader potrafi zwrócić błąd `0xCE` przy wczytywaniu `libportaudio64bit.dll`. Skrócenie ścieżki eliminuje problem.
+- Po zbudowaniu sprawdź, że w `dist\\RadarSuite_Windows\\_internal\\_sounddevice_data\\portaudio-binaries\\libportaudio64bit.dll` istnieje DLL i że log startowy zawiera linię `[pyi_rth_portaudio] Added PortAudio directory:`.
+
+
 ### PyInstaller Spec File
 
 **Location:** `build_tools/RadarSuite_V4.2.0_win.spec`

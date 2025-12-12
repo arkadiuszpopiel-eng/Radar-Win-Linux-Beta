@@ -40,16 +40,6 @@ if not hasattr(np, 'fromstring'):
 from scipy import signal as sp_signal
 import psutil
 
-try:
-    import sounddevice as sd
-except ImportError:
-    sd = None
-
-try:
-    import soundcard as sc
-except ImportError:
-    sc = None
-
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 from PyQt5.QtWidgets import (
@@ -2035,8 +2025,19 @@ def main():
     log(f"Python: {sys.version}", "INFO")
     log(f"NumPy: {np.__version__}", "INFO")
     log(f"pyqtgraph: {pg.__version__}", "INFO")
-    log(f"sounddevice available: {sd is not None}", "INFO")
-    log(f"soundcard available: {sc is not None}", "INFO")
+
+    # Lazy check for optional audio backends to avoid crashes when PortAudio is missing
+    try:
+        import sounddevice  # noqa: F401
+        log("sounddevice import OK", "INFO")
+    except Exception as e:
+        log(f"sounddevice import failed (audio will be disabled until resolved): {e}", "WARN")
+
+    try:
+        import soundcard  # noqa: F401
+        log("soundcard import OK", "INFO")
+    except Exception as e:
+        log(f"soundcard import failed (loopback disabled): {e}", "WARN")
 
     app = QApplication(sys.argv)
     app.setApplicationName("RadarSuite Final")

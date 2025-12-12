@@ -15,6 +15,8 @@ from typing import Dict, List, Optional, Any, Callable, TYPE_CHECKING
 
 import numpy as np
 
+from core.logger import log
+
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
@@ -31,15 +33,44 @@ def _fromstring_compat(string, dtype=float, count=-1, sep='', **kwargs):
 if not hasattr(np, 'fromstring'):
     np.fromstring = _fromstring_compat
 
-try:
-    import sounddevice as sd
-except ImportError:
-    sd = None
+sd = None
+sd_import_error = None
+sc = None
+sc_import_error = None
 
-try:
-    import soundcard as sc
-except ImportError:
-    sc = None
+
+def _load_sounddevice():
+    """Lazy import sounddevice with detailed error logging."""
+    global sd, sd_import_error
+    if sd is not None:
+        return sd
+    try:
+        import sounddevice as _sd
+
+        sd = _sd
+        sd_import_error = None
+    except Exception as exc:
+        sd = None
+        sd_import_error = f"{type(exc).__name__}: {exc}"
+        log(f"sounddevice unavailable: {sd_import_error}", "WARN")
+    return sd
+
+
+def _load_soundcard():
+    """Lazy import soundcard with detailed error logging."""
+    global sc, sc_import_error
+    if sc is not None:
+        return sc
+    try:
+        import soundcard as _sc
+
+        sc = _sc
+        sc_import_error = None
+    except Exception as exc:
+        sc = None
+        sc_import_error = f"{type(exc).__name__}: {exc}"
+        log(f"soundcard unavailable: {sc_import_error}", "WARN")
+    return sc
 
 # FIXED v4.1.1: Try pyaudiowpatch for WASAPI loopback with detailed error logging
 PYAUDIO_AVAILABLE = False
@@ -56,8 +87,6 @@ except OSError as e:
     PYAUDIO_IMPORT_ERROR = f"OSError (likely missing DLL): {e}"
 except Exception as e:
     PYAUDIO_IMPORT_ERROR = f"{type(e).__name__}: {e}"
-
-from core.logger import log
 
 # Log pyaudiowpatch availability at module load
 if PYAUDIO_AVAILABLE:
@@ -109,25 +138,27 @@ class AudioEngine:
         """List available audio devices (v4.2.1: type hints)."""
         devices: List[Dict[str, Any]] = []
 
-        if sd is not None:
+        sd_module = _load_sounddevice()
+        if sd_module is not None:
             try:
-                sd_devices = sd.query_devices()
+                sd_devices = sd_module.query_devices()
                 for idx, dev in enumerate(sd_devices):
                     devices.append({
                         'index': idx,
                         'name': dev['name'],
                         'channels': dev['max_input_channels'],
                         'samplerate': int(dev['default_samplerate']),
-                        'hostapi': sd.query_hostapis(dev['hostapi'])['name'],
+                        'hostapi': sd_module.query_hostapis(dev['hostapi'])['name'],
                         'type': 'input' if dev['max_input_channels'] > 0 else 'output',
                         'backend': 'sounddevice'
                     })
             except Exception as e:
                 log(f"Error listing sounddevice devices: {e}", "ERROR")
 
-        if sc is not None:
+        sc_module = _load_soundcard()
+        if sc_module is not None:
             try:
-                speakers = sc.all_speakers()
+                speakers = sc_module.all_speakers()
                 for idx, spk in enumerate(speakers):
                     devices.append({
                         'index': f"loopback_{idx}",
@@ -156,16 +187,18 @@ class AudioEngine:
         # causing an AttributeError on environments without sounddevice because
         # `_start_sounddevice` unconditionally referenced the module-level `sd`.
         if self.use_loopback:
-            if sc is None and not (PYAUDIO_AVAILABLE and sys.platform == 'win32'):
+            if _load_soundcard() is None and not (PYAUDIO_AVAILABLE and sys.platform == 'win32'):
                 log("Cannot start loopback: no soundcard or pyaudiowpatch backend available", "ERROR")
                 return
-        elif sd is None:
+        elif _load_sounddevice() is None:
             log("Cannot start sounddevice input: sounddevice module is not available", "ERROR")
             return
 
         self.running = True
 
-        if self.use_loopback and sc is not None:
+        sc_module = _load_soundcard()
+
+        if self.use_loopback and sc_module is not None:
             log(f"Starting soundcard loopback: {self.sample_rate}Hz, {self.blocksize} samples", "INFO")
             self._start_loopback()
         else:
@@ -174,7 +207,8 @@ class AudioEngine:
 
     def _start_sounddevice(self) -> None:
         """Start sounddevice input stream (v4.2.1: type hints)."""
-        if sd is None:
+        sd_module = _load_sounddevice()
+        if sd_module is None:
             log("sounddevice backend unavailable; aborting audio capture", "ERROR")
             self.running = False
             return
@@ -193,7 +227,7 @@ class AudioEngine:
                 except queue.Full:
                     pass
 
-            self.stream = sd.InputStream(
+            self.stream = sd_module.InputStream(
                 device=self.device,
                 channels=self.channels,
                 samplerate=self.sample_rate,
@@ -218,9 +252,10 @@ class AudioEngine:
             log("pyaudiowpatch failed, trying soundcard fallback", "WARN")
 
         # Fallback to soundcard
-        if sc is not None:
+        sc_module = _load_soundcard()
+        if sc_module is not None:
             log("Attempting loopback via soundcard", "INFO")
-            self._start_loopback_soundcard()
+            self._start_loopback_soundcard(sc_module)
         else:
             log("No loopback backend available!", "ERROR")
             self.running = False
@@ -345,7 +380,7 @@ class AudioEngine:
             log(f"Failed to start pyaudiowpatch loopback: {e}", "ERROR")
             return False
 
-    def _start_loopback_soundcard(self):
+    def _start_loopback_soundcard(self, sc_module):
         """Start soundcard loopback capture (fallback method)"""
 
         def loopback_thread():
@@ -377,11 +412,11 @@ class AudioEngine:
                     _np.fromstring = _fromstring_compat
                     log("Numpy fromstring patched in loopback thread", "INFO")
 
-                spk = sc.default_speaker()
+                spk = sc_module.default_speaker()
                 log(f"Using speaker: {spk.name}, channels: {spk.channels}", "INFO")
 
                 # FIXED v3.5.3: Use get_microphone with include_loopback for WASAPI loopback
-                loopback_mic = sc.get_microphone(id=str(spk.id), include_loopback=True)
+                loopback_mic = sc_module.get_microphone(id=str(spk.id), include_loopback=True)
                 log(f"Loopback microphone: {loopback_mic.name}", "INFO")
 
                 with loopback_mic.recorder(samplerate=self.sample_rate, channels=self.channels, blocksize=self.blocksize) as rec:

@@ -4,14 +4,28 @@ Sound Blaster Z SE audio card optimization
 ADDED v3.5.0: Sound Blaster Z SE hardware optimization
 """
 
-try:
-    import sounddevice as sd
-except ImportError:
-    sd = None
-
 from scipy.signal import butter, sosfilt
 
 from core.logger import log
+
+sd = None
+sd_import_error = None
+
+
+def _load_sounddevice():
+    global sd, sd_import_error
+    if sd is not None:
+        return sd
+    try:
+        import sounddevice as _sd
+
+        sd = _sd
+        sd_import_error = None
+    except Exception as exc:
+        sd = None
+        sd_import_error = f"{type(exc).__name__}: {exc}"
+        log(f"sounddevice unavailable for SoundBlaster detection: {sd_import_error}", "WARN")
+    return sd
 
 
 class SoundBlasterOptimizer:
@@ -42,11 +56,12 @@ class SoundBlasterOptimizer:
         Detect Sound Blaster audio devices
         Checks for Sound Blaster Z SE and other Creative cards
         """
-        if sd is None:
+        sd_module = _load_sounddevice()
+        if sd_module is None:
             return
 
         try:
-            devices = sd.query_devices()
+            devices = sd_module.query_devices()
             for idx, device in enumerate(devices):
                 device_name = device.get('name', '').lower()
 

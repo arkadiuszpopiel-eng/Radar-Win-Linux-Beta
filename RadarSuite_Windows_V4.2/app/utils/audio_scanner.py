@@ -6,17 +6,44 @@ Scans and monitors audio sources - shows selected device and available devices
 import time
 import psutil
 
-try:
-    import sounddevice as sd
-except ImportError:
-    sd = None
-
-try:
-    import soundcard as sc
-except ImportError:
-    sc = None
-
 from core.logger import log
+
+sd = None
+sd_import_error = None
+sc = None
+sc_import_error = None
+
+
+def _load_sounddevice():
+    global sd, sd_import_error
+    if sd is not None:
+        return sd
+    try:
+        import sounddevice as _sd
+
+        sd = _sd
+        sd_import_error = None
+    except Exception as exc:
+        sd = None
+        sd_import_error = f"{type(exc).__name__}: {exc}"
+        log(f"sounddevice unavailable for AudioSourceScanner: {sd_import_error}", "WARN")
+    return sd
+
+
+def _load_soundcard():
+    global sc, sc_import_error
+    if sc is not None:
+        return sc
+    try:
+        import soundcard as _sc
+
+        sc = _sc
+        sc_import_error = None
+    except Exception as exc:
+        sc = None
+        sc_import_error = f"{type(exc).__name__}: {exc}"
+        log(f"soundcard unavailable for AudioSourceScanner: {sc_import_error}", "WARN")
+    return sc
 
 
 class AudioSourceScanner:
@@ -89,12 +116,13 @@ class AudioSourceScanner:
                 self.is_receiving_audio = False
 
             # Scan sounddevice sources
-            if sd:
+            sd_module = _load_sounddevice()
+            if sd_module:
                 try:
-                    devices = sd.query_devices()
+                    devices = sd_module.query_devices()
                     default_input = None
                     try:
-                        default_input = sd.query_devices(kind='input')
+                        default_input = sd_module.query_devices(kind='input')
                     except Exception:
                         pass
 
@@ -136,9 +164,10 @@ class AudioSourceScanner:
                     log(f"Error scanning sounddevice: {e}", "ERROR")
 
             # Scan soundcard loopback sources
-            if sc:
+            sc_module = _load_soundcard()
+            if sc_module:
                 try:
-                    speakers = sc.all_speakers()
+                    speakers = sc_module.all_speakers()
                     for speaker in speakers:
                         dev_info = {
                             'name': f"[Loopback] {speaker.name}",
