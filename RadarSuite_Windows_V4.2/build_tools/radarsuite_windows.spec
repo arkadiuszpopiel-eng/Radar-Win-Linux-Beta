@@ -9,6 +9,8 @@ Includes: PyQt5, pyqtgraph, PyOpenGL (3D radar), psutil (game detection)
 
 import os
 import sys
+from pathlib import Path
+
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 
 # Get base path - use __file__ for more reliable path resolution
@@ -102,17 +104,20 @@ datas = []
 datas += collect_data_files('PyQt5')
 datas += collect_data_files('pyqtgraph')
 
-# CRITICAL: Include sounddevice data files (contains PortAudio DLLs)
+# CRITICAL: Include PortAudio binaries from _sounddevice_data
 try:
-    datas += collect_data_files('sounddevice')
-except Exception:
-    print("Warning: Could not collect sounddevice data files")
+    import _sounddevice_data
 
-# Also try to collect _sounddevice_data which contains PortAudio binaries
-try:
-    datas += collect_data_files('_sounddevice_data')
-except Exception:
-    pass
+    portaudio_dir = Path(_sounddevice_data.__file__).parent / 'portaudio-binaries'
+    if not portaudio_dir.exists():
+        raise FileNotFoundError(f"PortAudio binaries not found at {portaudio_dir}")
+
+    portaudio_dest = os.path.join('_internal', '_sounddevice_data', 'portaudio-binaries')
+    for dll in portaudio_dir.iterdir():
+        if dll.is_file():
+            datas.append((str(dll), portaudio_dest))
+except Exception as exc:
+    print(f"Warning: Could not bundle PortAudio binaries: {exc}")
 
 # WINDOWS OPTIMIZATIONS: Exclude modules that cause warnings
 excludes = [
@@ -142,7 +147,7 @@ a = Analysis(
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=[os.path.join(spec_dir, 'rthooks', 'pyi_rth_portaudio.py')],
     excludes=excludes,
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
