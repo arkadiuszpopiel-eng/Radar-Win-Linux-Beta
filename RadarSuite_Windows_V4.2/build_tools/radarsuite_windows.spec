@@ -103,6 +103,7 @@ hiddenimports += ['queue', 'math', 'pathlib', 'datetime', 'collections', 'thread
 datas = []
 datas += collect_data_files('PyQt5')
 datas += collect_data_files('pyqtgraph')
+binaries = []
 
 # CRITICAL: Include PortAudio binaries from _sounddevice_data
 try:
@@ -112,10 +113,10 @@ try:
     if not portaudio_dir.exists():
         raise FileNotFoundError(f"PortAudio binaries not found at {portaudio_dir}")
 
-    portaudio_dest = os.path.join('_internal', '_sounddevice_data', 'portaudio-binaries')
+    portaudio_dest = os.path.join('_sounddevice_data', 'portaudio-binaries')
     for dll in portaudio_dir.iterdir():
         if dll.is_file():
-            datas.append((str(dll), portaudio_dest))
+            binaries.append((str(dll), portaudio_dest))
 except Exception as exc:
     print(f"Warning: Could not bundle PortAudio binaries: {exc}")
 
@@ -139,15 +140,19 @@ excludes = [
 ]
 
 # Analysis
+portaudio_rthook = Path(spec_dir) / 'rthooks' / 'pyi_rth_portaudio.py'
+if not portaudio_rthook.is_file():
+    raise FileNotFoundError(f"Runtime hook not found: {portaudio_rthook}")
+
 a = Analysis(
     [entry_script],
     pathex=[BASE, APP_DIR],  # Include app directory for module imports
-    binaries=[],
+    binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[os.path.join(spec_dir, 'rthooks', 'pyi_rth_portaudio.py')],
+    runtime_hooks=[str(portaudio_rthook)],
     excludes=excludes,
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
