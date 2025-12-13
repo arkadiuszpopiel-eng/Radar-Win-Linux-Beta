@@ -103,33 +103,20 @@ def get_ml_training_report_path(profile_name: str) -> Path:
 
 def cleanup_legacy_log() -> None:
     """
-    One-time cleanup of legacy super_log.txt from repository root
+    One-time cleanup of legacy super_log.txt from repository root.
 
-    If old super_log.txt exists in root, move it to log/ as legacy file
+    Requirement (k0012): the historical root-level super_log.txt and
+    legacy_super_log_v2.3.0.txt must disappear from both the repository
+    and runtime output. We therefore delete them instead of migrating.
     """
-    if LEGACY_SUPER_LOG.exists() and LEGACY_SUPER_LOG.is_file():
-        try:
-            # Move to log directory with legacy prefix
-            legacy_destination = LOG_DIR / "legacy_super_log_v2.3.0.txt"
 
-            # Avoid overwriting if legacy file already exists
-            if not legacy_destination.exists():
-                import shutil
-                shutil.move(str(LEGACY_SUPER_LOG), str(legacy_destination))
-
-                # Log the migration (but carefully - logger might not be initialized yet)
-                try:
-                    from .logger import log
-                    log(f"Migrated legacy super_log.txt to {legacy_destination}", "INFO")
-                except:
-                    # If logger not ready, just print
-                    print(f"[paths.py] Migrated legacy super_log.txt to {legacy_destination}")
-            else:
-                # Legacy file already exists, just remove the old one
-                LEGACY_SUPER_LOG.unlink()
-        except Exception as e:
-            # Silent fail - this is just cleanup
-            print(f"[paths.py] Could not migrate legacy super_log.txt: {e}")
+    try:
+        legacy_candidates = [LEGACY_SUPER_LOG, LOG_DIR / "legacy_super_log_v2.3.0.txt"]
+        for candidate in legacy_candidates:
+            if candidate.exists() and candidate.is_file():
+                candidate.unlink()
+    except Exception as exc:  # pragma: no cover - defensive cleanup
+        print(f"[paths.py] Could not remove legacy super logs: {exc}")
 
 
 # ============================================================================

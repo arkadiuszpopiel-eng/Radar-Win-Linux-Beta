@@ -49,180 +49,87 @@ from PyQt5.QtWidgets import (
     QFormLayout, QMessageBox, QAction, QSizePolicy, QFileDialog,
     QDialog, QDialogButtonBox, QRadioButton, QButtonGroup
 )
-from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPoint
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPoint, QElapsedTimer
 from PyQt5.QtGui import QPainter, QColor, QPen, QBrush, QPalette
 
 # ============================================================================
-# MODULE IMPORTS - Support both package and standalone execution
+# MODULE IMPORTS - Deterministic package imports
 # ============================================================================
-# Add current directory to path for standalone script execution
-# This allows 'from core import ...' to work when running 'python main.py'
-_current_dir = os.path.dirname(os.path.abspath(__file__))
-if _current_dir not in sys.path:
-    sys.path.insert(0, _current_dir)
-
-# Try relative imports first (when running as package module)
-# Fall back to direct imports (when running as standalone script)
-try:
-    # ============================================================================
-    # CORE MODULE IMPORTS (Point 10 - v3.5.0: Modularization)
-    # ============================================================================
-    from .core import (
-        # Constants
-        VERSION,
-        SAMPLE_RATE,
-        BLOCK_SIZE,
-        CHANNELS,
-        TICK_INTERVAL_MS,
-        GAME_SCAN_INTERVAL_MS,
-        AUDIO_SCAN_INTERVAL_MS,
-        STARTUP_DELAY_MS,
-        STARTUP_AUDIO_DELAY_MS,
-        ENERGY_THRESHOLD,
-        LOCALIZATION_MIN_CONFIDENCE,
-        RADAR_ROTATION_DEG,
-        MAX_WORKERS,
-        DETECTION_TIMEOUT_SEC,
-        CLEANUP_INTERVAL_SEC,
-        AUDIO_LEVEL_LOUD,
-        AUDIO_LEVEL_MEDIUM,
-        AUDIO_LEVEL_LOW,
-        RECORDING_BUFFER_SIZE,
-        RECORDING_FLUSH_INTERVAL,
-        TOAST_DURATION_MS,
-        TOAST_MAX_COUNT,
-
-        # Logger
-        ThreadSafeLogger,
-        log,
-        ROOT,
-        SUPER_LOG,
-
-        # Config
-        ConfigManager,
-
-        # Translations
-        TRANSLATIONS,
-        current_language,
-        tr,
-        set_language,
-        get_language,
-    )
-
-    # v4.2.1: Export/Import
-    from .core.export_import import ExportImportManager
-
-    # ============================================================================
-    # HARDWARE MODULE IMPORTS (Point 10 - v3.5.0: Modularization)
-    # ============================================================================
-    from .hardware import (
-        GPUAccelerator,
-        SoundBlasterOptimizer,
-    )
-
-    # ============================================================================
-    # UTILS MODULE IMPORTS (Point 10 - v3.5.0: Modularization)
-    # ============================================================================
-    from .utils import (
-        PerformanceMonitor,
-        GameProcessDetector,
-        PlatformLauncherDetector,
-        AudioSourceScanner,
-    )
-
-    # ============================================================================
-    # TRACKING MODULE IMPORTS (Point 10 - v3.5.0: Modularization)
-    # ============================================================================
-    from .tracking import (
-        Target,
-        TargetTracker,
-        ThreatPrioritySystem,
-    )
-
-    # ============================================================================
-    # DETECTION MODULE IMPORTS (Point 10 - v3.5.0: Modularization)
-    # ============================================================================
-    from .detection import (
-        DetectionWorker,
-        HumanFootstepDetector,
-    )
-
-    # ============================================================================
-    # AUDIO MODULE IMPORTS (Point 10 - v3.5.0: Modularization)
-    # ============================================================================
-    from .audio import (
-        AudioProcessingCache,
-        AudioEngine,
-        SoundClassifier,
-        AudioRecorder,
-        HumanVoiceDetector,
-        AudioProcessor,  # v4.2.0: Extracted audio algorithms
-    )
-
-    # ============================================================================
-    # WIDGETS MODULE IMPORTS (Point 10 - v3.5.0: Modularization)
-    # ============================================================================
-    from .widgets import (
-        ToastNotification,
-        DetachableRadarWidget,
-        RadarWidget,
-        MilitaryHUDRadar,
-        Military3DRadar,
-        Radar3DWidget,
-        DetachableLedWidget,
-        LedOverlayWidget,
-        SpectrumWidget,
-        WaterfallWidget,
-        WaveformWidget,
-        MilitarySpectrumWidget,
-        MilitaryWaterfallWidget,
-        MilitaryWaveformWidget,
-        DevicePanel,
-        DetectionPanel,
-    )
-
-    # ============================================================================
-    # UI MODULE IMPORTS (v4.2.0: UIBuilder extraction from MainWindow)
-    # ============================================================================
-    from .ui import UIBuilder
-    from .diagnostics import SelfTestRunner
-
-except ImportError:
-    # Fallback to direct imports when running as standalone script
-    from core import (
-        VERSION, SAMPLE_RATE, BLOCK_SIZE, CHANNELS,
-        TICK_INTERVAL_MS, GAME_SCAN_INTERVAL_MS, AUDIO_SCAN_INTERVAL_MS,
-        STARTUP_DELAY_MS, STARTUP_AUDIO_DELAY_MS, ENERGY_THRESHOLD,
-        LOCALIZATION_MIN_CONFIDENCE, RADAR_ROTATION_DEG, MAX_WORKERS, DETECTION_TIMEOUT_SEC,
-        CLEANUP_INTERVAL_SEC, AUDIO_LEVEL_LOUD, AUDIO_LEVEL_MEDIUM,
-        AUDIO_LEVEL_LOW, RECORDING_BUFFER_SIZE, RECORDING_FLUSH_INTERVAL,
-        TOAST_DURATION_MS, TOAST_MAX_COUNT,
-        ThreadSafeLogger, log, ROOT, SUPER_LOG,
-        ConfigManager,
-        TRANSLATIONS, current_language, tr, set_language, get_language,
-    )
-    from core.export_import import ExportImportManager
-    from hardware import GPUAccelerator, SoundBlasterOptimizer
-    from utils import (
-        PerformanceMonitor, GameProcessDetector,
-        PlatformLauncherDetector, AudioSourceScanner,
-    )
-    from tracking import Target, TargetTracker, ThreatPrioritySystem
-    from detection import DetectionWorker, HumanFootstepDetector
-    from audio import (
-        AudioProcessingCache, AudioEngine, SoundClassifier,
-        AudioRecorder, HumanVoiceDetector, AudioProcessor,
-    )
-    from widgets import (
-        ToastNotification, DetachableRadarWidget, RadarWidget,
-        MilitaryHUDRadar, Military3DRadar, Radar3DWidget,
-        DetachableLedWidget, LedOverlayWidget,
-        SpectrumWidget, WaterfallWidget, WaveformWidget,
-        MilitarySpectrumWidget, MilitaryWaterfallWidget, MilitaryWaveformWidget,
-        DevicePanel, DetectionPanel,
-    )
-    from ui import UIBuilder
-    from diagnostics import SelfTestRunner
+from app.core import (
+    APP_ROOT,
+    LOG_DIR,
+    REPORT_DIR,
+    VERSION,
+    SAMPLE_RATE,
+    BLOCK_SIZE,
+    CHANNELS,
+    TICK_INTERVAL_MS,
+    GAME_SCAN_INTERVAL_MS,
+    AUDIO_SCAN_INTERVAL_MS,
+    STARTUP_DELAY_MS,
+    STARTUP_AUDIO_DELAY_MS,
+    ENERGY_THRESHOLD,
+    LOCALIZATION_MIN_CONFIDENCE,
+    RADAR_ROTATION_DEG,
+    MAX_WORKERS,
+    DETECTION_TIMEOUT_SEC,
+    CLEANUP_INTERVAL_SEC,
+    AUDIO_LEVEL_LOUD,
+    AUDIO_LEVEL_MEDIUM,
+    AUDIO_LEVEL_LOW,
+    RECORDING_BUFFER_SIZE,
+    RECORDING_FLUSH_INTERVAL,
+    TOAST_DURATION_MS,
+    TOAST_MAX_COUNT,
+    ThreadSafeLogger,
+    log,
+    SUPER_LOG_FILE,
+    ConfigManager,
+    TRANSLATIONS,
+    current_language,
+    tr,
+    set_language,
+    get_language,
+    get_build_id,
+)
+from app.core.export_import import ExportImportManager
+from app.hardware import GPUAccelerator, SoundBlasterOptimizer
+from app.utils import (
+    PerformanceMonitor,
+    GameProcessDetector,
+    PlatformLauncherDetector,
+    AudioSourceScanner,
+)
+from app.tracking import Target, TargetTracker, ThreatPrioritySystem
+from app.detection import DetectionWorker, HumanFootstepDetector
+from app.audio import (
+    AudioProcessingCache,
+    AudioEngine,
+    SoundClassifier,
+    AudioRecorder,
+    HumanVoiceDetector,
+    AudioProcessor,
+)
+from app.widgets import (
+    ToastNotification,
+    DetachableRadarWidget,
+    RadarWidget,
+    MilitaryHUDRadar,
+    Military3DRadar,
+    Radar3DWidget,
+    DetachableLedWidget,
+    LedOverlayWidget,
+    SpectrumWidget,
+    WaterfallWidget,
+    WaveformWidget,
+    MilitarySpectrumWidget,
+    MilitaryWaterfallWidget,
+    MilitaryWaveformWidget,
+    DevicePanel,
+    DetectionPanel,
+)
+from app.ui import UIBuilder
+from app.diagnostics import SelfTestRunner
 
 # ============================================================================
 # CONFIG MANAGER - Imported from core module
@@ -239,8 +146,8 @@ except ImportError:
 import logging
 import logging.handlers
 
-ROOT = Path(__file__).parent.parent
-SUPER_LOG = ROOT / "super_log.txt"
+ROOT = APP_ROOT
+SUPER_LOG = SUPER_LOG_FILE
 
 
 # ThreadSafeLogger - Imported from core module
@@ -332,6 +239,18 @@ def apply_dark_theme(app: QApplication):
 
 
 
+class _RadarDetachWindow(QMainWindow):
+    """Thin wrapper that re-attaches the radar when closed."""
+
+    def __init__(self, on_close, parent=None):
+        super().__init__(parent)
+        self._on_close = on_close
+
+    def closeEvent(self, event):  # pragma: no cover - GUI interaction
+        if self._on_close:
+            self._on_close()
+        event.accept()
+
 
 class MainWindow(QMainWindow):
     """
@@ -353,9 +272,15 @@ class MainWindow(QMainWindow):
         self.radar_angle = 0.0
         self.test_phase = 0.0
 
+        # Build identifier for diagnostics (hash + UTC timestamp)
+        self.build_id = get_build_id()
+        log(f"BUILD_ID: {self.build_id}", "INFO")
+
         # Detachable windows
         self.detached_radar = None
         self.detached_led = None
+        self.radar_window = None
+        self.radar_placeholder = None
 
         # Point 11 - v3.5.0: Dependency Injection
         if container is not None:
@@ -397,6 +322,14 @@ class MainWindow(QMainWindow):
         # Initial scans (v3.0) - FIXED v3.5.0: Use constants
         QTimer.singleShot(STARTUP_DELAY_MS, self.scan_games)
         QTimer.singleShot(STARTUP_AUDIO_DELAY_MS, self.scan_audio_sources)
+
+        # GUI freeze watchdog (diagnostic mode)
+        self._ui_watchdog_elapsed = QElapsedTimer()
+        self._ui_watchdog_elapsed.start()
+        self._ui_watchdog = QTimer(self)
+        self._ui_watchdog.setInterval(250)
+        self._ui_watchdog.timeout.connect(self._ui_watchdog_tick)
+        self._ui_watchdog.start()
 
     def _inject_dependencies(self, container):
         """
@@ -904,6 +837,36 @@ class MainWindow(QMainWindow):
             self.showFullScreen()
             self.toast.show_toast("Entered fullscreen (F11 to exit)", "info", 2000)
 
+    def _ui_watchdog_tick(self):
+        """Detect long event-loop stalls and surface diagnostic context."""
+        if not self._ui_watchdog_elapsed.isValid():
+            self._ui_watchdog_elapsed.start()
+
+        elapsed = self._ui_watchdog_elapsed.elapsed()
+        self._ui_watchdog_elapsed.restart()
+        delay = elapsed - self._ui_watchdog.interval()
+        if delay > 1500:
+            recording_state = getattr(self, 'recording_controller', None)
+            is_recording = False
+            elapsed_sec = 0.0
+            if recording_state is not None:
+                try:
+                    state = recording_state.state
+                    is_recording = bool(state.is_recording)
+                    elapsed_sec = float(state.elapsed_sec)
+                except Exception:
+                    pass
+
+            overlay = getattr(self, 'ml_quick_overlay', None)
+            overlay_visible = bool(overlay and overlay.isVisible())
+
+            log(
+                f"GUI_STALL detected: {int(delay)} ms | recording={is_recording} "
+                f"(elapsed={elapsed_sec:.2f}s) | overlay_visible={overlay_visible} | "
+                f"threads={threading.active_count()}",
+                "WARNING",
+            )
+
     def update_radar_alpha(self, value):
         """Update radar opacity"""
         opacity = value / 100.0
@@ -949,20 +912,45 @@ class MainWindow(QMainWindow):
         except Exception as e:
             log(f"Error updating detached radar.{method_name}: {e}", "ERROR")
 
-    def toggle_detach_radar(self, checked):
-        """Toggle radar detachment"""
-        if checked:
-            # Create detached radar
+    def _ensure_detached_radar(self):
+        if self.detached_radar is None:
             self.detached_radar = DetachableRadarWidget()
-            self.detached_radar.set_opacity(self.radar_alpha.value() / 100.0)
-            self.detached_radar.show()
-            log("Radar detached", "INFO")
+
+    def _handle_radar_window_closed(self):
+        if self.detach_radar_btn.isChecked():
+            self.detach_radar_btn.setChecked(False)
+        self._attach_radar()
+
+    def _detach_radar(self):
+        self._ensure_detached_radar()
+        if self.radar_window is None:
+            self.radar_window = _RadarDetachWindow(self._handle_radar_window_closed, self)
+            self.radar_window.setWindowTitle(f"{tr('radar')} - {VERSION}")
+        if self.radar_window.centralWidget() is None:
+            self.radar_window.setCentralWidget(self.detached_radar)
+        self.detached_radar.set_opacity(self.radar_alpha.value() / 100.0)
+        self.radar_window.show()
+        self.radar_window.raise_()
+        log("Radar detached", "INFO")
+
+    def _attach_radar(self):
+        if self.radar_window:
+            self.radar_window.hide()
+            if self.radar_window.centralWidget():
+                self.radar_window.takeCentralWidget()
+        if self.detached_radar:
+            self.detached_radar.hide()
+            self.detached_radar.setParent(None)
+        if hasattr(self, 'detach_radar_btn') and self.detach_radar_btn.isChecked():
+            self.detach_radar_btn.setChecked(False)
+        log("Radar attached", "INFO")
+
+    def toggle_detach_radar(self, checked):
+        """Toggle radar detachment without duplicating widgets."""
+        if checked:
+            self._detach_radar()
         else:
-            # Close detached radar
-            if self.detached_radar:
-                self.detached_radar.close()
-                self.detached_radar = None
-            log("Radar attached", "INFO")
+            self._attach_radar()
 
     def toggle_detach_led(self, checked):
         """Toggle LED detachment"""

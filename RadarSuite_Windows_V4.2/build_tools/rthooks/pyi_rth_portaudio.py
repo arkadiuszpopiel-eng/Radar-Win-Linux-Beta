@@ -1,36 +1,40 @@
-"""Ensure PortAudio DLL directory is discoverable before importing sounddevice."""
+"""Runtime hook to ensure PortAudio DLLs are discoverable in PyInstaller builds.
+
+This hook is intentionally defensive: it must never abort application startup even
+if PortAudio binaries are missing. Only stdlib modules are used to avoid import
+errors during the early bootstrap stage.
+"""
 
 import os
 import sys
-from pathlib import Path
 
 
-def _resolve_base_dir() -> Path:
-    """Return base directory depending on PyInstaller mode."""
-    if hasattr(sys, "_MEIPASS"):
-        return Path(sys._MEIPASS)
-    return Path(sys.executable).parent
+def _safe_add_dir(path: str) -> None:
+    """Add *path* to the DLL search path if it exists."""
 
-
-def _add_portaudio_dir():
-    base_dir = _resolve_base_dir()
-    candidates = [
-        base_dir / "_internal" / "_sounddevice_data" / "portaudio-binaries",
-        base_dir / "_sounddevice_data" / "portaudio-binaries",
-        base_dir / "portaudio-binaries",
-    ]
-
-    for cand in candidates:
-        if cand.exists():
-            os.add_dll_directory(str(cand))
-            os.environ["PATH"] = str(cand) + os.pathsep + os.environ.get("PATH", "")
-            print(f"[pyi_rth_portaudio] Added PortAudio directory: {cand}")
+    try:
+        if not path or not os.path.isdir(path):
             return
 
-    print("[pyi_rth_portaudio] PortAudio directory not found; sounddevice may fail to load")
+        if hasattr(os, "add_dll_directory"):
+            os.add_dll_directory(path)
+        else:
+            os.environ["PATH"] = path + os.pathsep + os.environ.get("PATH", "")
+    except Exception:
+        # Runtime hooks must never raise; swallow errors silently.
+        pass
 
 
-try:
-    _add_portaudio_dir()
-except Exception as exc:  # pragma: no cover - defensive logging only
-    print(f"[pyi_rth_portaudio] Failed to configure PortAudio DLL path: {exc}")
+base_dir = getattr(sys, "_MEIPASS", None)
+if base_dir and os.path.isdir(base_dir):
+    _safe_add_dir(base_dir)
+
+    candidates = [
+        os.path.join(base_dir, "_sounddevice_data", "portaudio-binaries"),
+        os.path.join(base_dir, "bin"),
+        os.path.join(base_dir, "lib"),
+        os.path.join(base_dir, "libs"),
+    ]
+
+    for candidate in candidates:
+        _safe_add_dir(candidate)
