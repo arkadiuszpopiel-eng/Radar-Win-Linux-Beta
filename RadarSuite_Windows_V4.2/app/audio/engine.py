@@ -172,8 +172,33 @@ class AudioEngine:
                     })
             except Exception as e:
                 log(f"Error listing soundcard devices: {e}", "ERROR")
+        unique = self._deduplicate_devices(devices)
+        log(
+            f"Audio devices refreshed: raw={len(devices)} unique={len(unique)}",
+            "INFO",
+        )
+        return unique
 
-        return devices
+    @staticmethod
+    def _deduplicate_devices(devices: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Collapse duplicated devices across backends."""
+
+        def _key(dev: Dict[str, Any]):
+            backend = dev.get('backend', 'unknown')
+            hostapi = dev.get('hostapi', '')
+            idx = dev.get('index')
+            name = dev.get('name', '').strip().lower()
+            return (backend, hostapi, idx, name)
+
+        seen = set()
+        unique: List[Dict[str, Any]] = []
+        for dev in devices:
+            key = _key(dev)
+            if key in seen:
+                continue
+            seen.add(key)
+            unique.append(dev)
+        return unique
 
     def start(self) -> None:
         """Start audio capture (v4.2.1: type hints)."""
