@@ -24,8 +24,8 @@ except NameError:
 BASE = os.path.dirname(spec_dir)
 APP_DIR = os.path.join(BASE, 'app')
 
-# Entry point
-entry_script = os.path.join(BASE, 'app', 'main.py')
+# Entry point uses a top-level launcher to keep imports package-aware
+entry_script = os.path.join(BASE, 'run_radarsuite.py')
 
 # Verify entry script exists
 if not os.path.exists(entry_script):
@@ -43,6 +43,7 @@ hiddenimports = []
 hiddenimports += [
     # Version module
     'version',
+    'core.version',
     # Core modules
     'core', 'core.constants', 'core.config', 'core.logger', 'core.translations',
     'core.di', 'core.confidence', 'core.error_handler', 'core.profiler', 'core.export_import',
