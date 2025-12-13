@@ -91,6 +91,38 @@ def get_build_info():
         'platform': BUILD_PLATFORM
     }
 
+
+def get_build_id() -> str:
+    """
+    Compose a unique BUILD_ID for diagnostics and end-user verification.
+
+    Includes the current git commit hash (if available) and a UTC timestamp.
+    Falls back gracefully when git metadata is unavailable (e.g., in a clean
+    PyInstaller build directory).
+    """
+
+    from datetime import datetime
+    import subprocess
+    import os
+
+    commit = "unknown"
+    try:
+        commit = (
+            subprocess.check_output(
+                ["git", "rev-parse", "HEAD"],
+                cwd=os.path.dirname(__file__),
+                stderr=subprocess.DEVNULL,
+            )
+            .decode()
+            .strip()
+        )
+    except Exception:
+        # In frozen builds or zipped artifacts git may not exist; keep "unknown".
+        pass
+
+    timestamp = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    return f"{__version_full__}+{commit}+{timestamp}"
+
 if __name__ == "__main__":
     # Display version when run directly
     print(f"RadarSuite Version: {__version_full__}")

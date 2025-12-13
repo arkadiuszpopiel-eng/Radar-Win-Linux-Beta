@@ -1,0 +1,8 @@
+# Logs moved to log/
+/super_log*.txt
+/legacy_super_log*.txt
+/*REPORT*
+/build/
+/dist/
+__pycache__/
+*.pyc

@@ -612,3 +612,9 @@ class UIBuilder:
         self.main.status_bar.setStyleSheet(self.STATUSBAR_STYLE)
         self.main.setStatusBar(self.main.status_bar)
         self.main.status_bar.showMessage(f"✓ {tr('ready')} - All systems operational")
+
+        # Permanent build ID indicator for user-side verification
+        build_label = QLabel(self.main.build_id)
+        build_label.setStyleSheet("color: #7aa2f7; font-weight: bold;")
+        self.main.status_bar.addPermanentWidget(build_label)
+        self.main.build_label = build_label

@@ -71,6 +71,9 @@ from .paths import (
     get_ml_training_report_path,
 )
 
+# Version metadata / build identification
+from .version import get_build_id
+
 # Logger
 from .logger import (
     ThreadSafeLogger,
