@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Dataset i modele (zbyt duże dla git)
+data/raw/*.png
+data/raw/*.jpg
+data/labeled/images/**/*.png
+data/labeled/images/**/*.jpg
+data/labeled/labels/**/*.txt
+data/models/*.onnx
+data/models/*.pt
+runs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# System
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# PyInstaller
+build/
+dist/
+*.spec.bak
+
+# Temporary files
+*.tmp
+*.bak

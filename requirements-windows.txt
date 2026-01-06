@@ -1,0 +1,37 @@
+# Requirements dla Windows (z prekompilowanymi pakietami)
+# Użyj: pip install -r requirements-windows.txt
+
+# Core ML and Computer Vision
+ultralytics>=8.0.0
+opencv-python>=4.8.0
+# numpy - instalowane osobno w build.cmd (krok 3)
+onnx>=1.14.0
+
+# ONNX Runtime - AMD GPU Support (RX 7900 GRE)
+# Windows: DirectML dla AMD GPU
+onnxruntime-directml>=1.16.0
+
+# PyTorch z wsparciem AMD GPU (opcjonalne, dla treningu)
+# Dla Windows użyj: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Screen Capture
+mss>=9.0.0
+pillow>=10.0.0
+
+# GUI and Overlay
+PyQt5>=5.15.0
+pywin32>=306
+
+# Performance
+psutil>=5.9.0
+
+# Configuration
+pyyaml>=6.0
+
+# Utilities
+keyboard>=0.13.5
+
+# Build Tools
+pyinstaller>=6.0.0

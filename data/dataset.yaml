@@ -1,0 +1,13 @@
+# Dataset configuration dla YOLO training
+
+# Ścieżki
+path: ../data  # root datasetu
+train: labeled/images/train  # obrazy treningowe
+val: labeled/images/val  # obrazy walidacyjne
+
+# Klasy
+names:
+  0: crate  # skrzynka / loot
+
+# Liczba klas
+nc: 1

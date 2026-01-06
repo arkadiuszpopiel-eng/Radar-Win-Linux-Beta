@@ -1,0 +1,35 @@
+# Core ML and Computer Vision
+ultralytics>=8.0.0
+opencv-python>=4.8.0
+# numpy - instalowane osobno w build.cmd (krok 3) jako numpy==1.26.4
+onnx>=1.14.0
+
+# ONNX Runtime - AMD GPU Support (RX 7900 GRE)
+# Windows: DirectML dla AMD GPU
+onnxruntime-directml>=1.16.0; platform_system=="Windows"
+# Linux: ROCm dla AMD GPU
+onnxruntime-rocm>=1.16.0; platform_system=="Linux"
+
+# PyTorch z wsparciem AMD GPU (opcjonalne, dla treningu)
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Screen Capture
+mss>=9.0.0
+pillow>=10.0.0
+
+# GUI and Overlay
+PyQt5>=5.15.0
+pywin32>=306; platform_system=="Windows"
+
+# Performance
+psutil>=5.9.0
+
+# Configuration
+pyyaml>=6.0
+
+# Utilities
+keyboard>=0.13.5
+
+# Build Tools
+pyinstaller>=6.0.0
