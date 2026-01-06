@@ -10,6 +10,12 @@ echo ====================================================================
 echo YOLO OBJECT DETECTION - BUILD SCRIPT
 echo ====================================================================
 echo.
+echo UWAGA: Jesli to pierwsze uruchomienie, najpierw uruchom:
+echo        install_deps.cmd
+echo.
+echo Kontynuowanie za 3 sekundy...
+timeout /t 3 >nul
+echo.
 
 REM Ustawienia
 set "BUILD_DIR=build"
@@ -81,18 +87,26 @@ if exist "requirements-windows.txt" (
 if errorlevel 1 (
     echo [ERROR] Błąd podczas instalacji zależności!
     echo.
+    echo NAJPIERW URUCHOM: install_deps.cmd
+    echo.
     echo MOŻLIWE ROZWIĄZANIA:
-    echo 1. Zainstaluj Microsoft Visual Studio Build Tools
+    echo 1. Użyj skryptu instalacyjnego (ZALECANE):
+    echo    install_deps.cmd
+    echo.
+    echo 2. Zainstaluj Microsoft Visual Studio Build Tools
     echo    https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022
     echo.
-    echo 2. Lub użyj stabilnej wersji Python (3.11 lub 3.12)
+    echo 3. Lub użyj stabilnej wersji Python (3.11 lub 3.12)
     echo    https://www.python.org/downloads/
     echo.
-    echo 3. Lub zainstaluj pakiety ręcznie:
+    echo 4. Lub zainstaluj pakiety ręcznie:
     echo    pip install numpy==1.26.4
     echo    pip install -r requirements-windows.txt
     echo.
     echo [%date% %time%] [ERROR] Failed to install dependencies >> "%BUILD_LOG%"
+    echo.
+    echo Naciśnij dowolny klawisz aby zobaczyć szczegóły błędu...
+    pause >nul
     goto :error
 )
 
