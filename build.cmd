@@ -30,8 +30,8 @@ echo [%date% %time%] Build started > "%BUILD_LOG%"
 REM ====================================================================
 REM KROK 1: Znajdź najlepszą wersję Python
 REM ====================================================================
-echo [1/7] Wyszukiwanie najlepszej wersji Python...
-echo [%date% %time%] [1/7] Finding best Python version >> "%BUILD_LOG%"
+echo [1/8] Wyszukiwanie najlepszej wersji Python...
+echo [%date% %time%] [1/8] Finding best Python version >> "%BUILD_LOG%"
 echo.
 
 REM Priorytet: 3.11 -> 3.12 -> 3.10 -> py -> python
@@ -86,18 +86,37 @@ echo.
 REM ====================================================================
 REM KROK 2: Upgrade pip
 REM ====================================================================
-echo [2/7] Aktualizuję pip...
-echo [%date% %time%] [2/7] Upgrading pip >> "%BUILD_LOG%"
+echo [2/8] Aktualizuję pip...
+echo [%date% %time%] [2/8] Upgrading pip >> "%BUILD_LOG%"
 
 %PYTHON_CMD% -m pip install --upgrade pip >> "%BUILD_LOG%" 2>&1
 echo [OK] pip zaktualizowany
 echo.
 
 REM ====================================================================
-REM KROK 3: Instaluj zależności
+REM KROK 3: Instaluj NumPy (prekompilowany)
 REM ====================================================================
-echo [3/7] Instaluję zależności...
-echo [%date% %time%] [3/7] Installing dependencies >> "%BUILD_LOG%"
+echo [3/7] Instaluję NumPy (prekompilowany)...
+echo [%date% %time%] [3/7] Installing NumPy >> "%BUILD_LOG%"
+
+%PYTHON_CMD% -m pip install numpy==1.26.4 >> "%BUILD_LOG%" 2>&1
+if errorlevel 1 (
+    echo [ERROR] Nie udało się zainstalować NumPy!
+    echo.
+    echo ROZWIĄZANIE:
+    echo Zainstaluj Visual Studio Build Tools lub użyj starszej wersji Python.
+    echo.
+    pause
+    goto :error
+)
+echo [OK] NumPy zainstalowany
+echo.
+
+REM ====================================================================
+REM KROK 4: Instaluj pozostałe zależności
+REM ====================================================================
+echo [4/7] Instaluję pozostałe zależności...
+echo [%date% %time%] [4/7] Installing other dependencies >> "%BUILD_LOG%"
 echo To może zająć kilka minut przy pierwszym uruchomieniu...
 echo.
 
@@ -111,34 +130,19 @@ if exist "requirements-windows.txt" (
 )
 
 if errorlevel 1 (
-    echo [ERROR] Błąd podczas instalacji zależności!
-    echo.
-    echo MOŻLIWE ROZWIĄZANIA:
-    echo.
-    echo 1. Zainstaluj numpy ręcznie:
-    echo    %PYTHON_CMD% -m pip install numpy==1.26.4
-    echo.
-    echo 2. Zainstaluj Visual Studio Build Tools:
-    echo    https://visualstudio.microsoft.com/downloads/
-    echo.
-    echo 3. Użyj Python 3.11 lub 3.12 (najbardziej stabilne)
-    echo    https://www.python.org/downloads/
-    echo.
-    echo Sprawdź szczegóły w: %BUILD_LOG%
-    echo.
-    echo [%date% %time%] [ERROR] Failed to install dependencies >> "%BUILD_LOG%"
-    pause
-    goto :error
+    echo [WARNING] Niektóre pakiety mogły nie zainstalować się poprawnie
+    echo Kontynuuję...
+    echo [%date% %time%] [WARNING] Some packages failed >> "%BUILD_LOG%"
 )
 
 echo [OK] Zależności zainstalowane
 echo.
 
 REM ====================================================================
-REM KROK 4: Weryfikacja instalacji
+REM KROK 5: Weryfikacja instalacji
 REM ====================================================================
-echo [4/7] Weryfikuję instalację...
-echo [%date% %time%] [4/7] Verifying installation >> "%BUILD_LOG%"
+echo [5/8] Weryfikuję instalację...
+echo [%date% %time%] [5/8] Verifying installation >> "%BUILD_LOG%"
 
 %PYTHON_CMD% -c "import numpy; import torch; import cv2; import onnxruntime; import PyQt5" >nul 2>&1
 if errorlevel 1 (
@@ -150,10 +154,10 @@ if errorlevel 1 (
 echo.
 
 REM ====================================================================
-REM KROK 5: Wyczyść poprzednie buildy
+REM KROK 6: Wyczyść poprzednie buildy
 REM ====================================================================
-echo [5/7] Czyszczę poprzednie buildy...
-echo [%date% %time%] [5/7] Cleaning previous builds >> "%BUILD_LOG%"
+echo [6/8] Czyszczę poprzednie buildy...
+echo [%date% %time%] [6/8] Cleaning previous builds >> "%BUILD_LOG%"
 
 if exist "%BUILD_DIR%" rmdir /s /q "%BUILD_DIR%" 2>nul
 if exist "%DIST_DIR%" rmdir /s /q "%DIST_DIR%" 2>nul
@@ -163,10 +167,10 @@ echo [OK] Poprzednie buildy wyczyszczone
 echo.
 
 REM ====================================================================
-REM KROK 6: Kompiluj z PyInstaller
+REM KROK 7: Kompiluj z PyInstaller
 REM ====================================================================
-echo [6/7] Kompiluję aplikację do .exe...
-echo [%date% %time%] [6/7] Building with PyInstaller >> "%BUILD_LOG%"
+echo [7/8] Kompiluję aplikację do .exe...
+echo [%date% %time%] [7/8] Building with PyInstaller >> "%BUILD_LOG%"
 echo To może zająć 5-10 minut...
 echo.
 
@@ -206,10 +210,10 @@ echo [OK] Kompilacja zakończona
 echo.
 
 REM ====================================================================
-REM KROK 7: Sprawdź wynik
+REM KROK 8: Sprawdź wynik
 REM ====================================================================
-echo [7/7] Sprawdzam wynik...
-echo [%date% %time%] [7/7] Verifying build >> "%BUILD_LOG%"
+echo [8/8] Sprawdzam wynik...
+echo [%date% %time%] [8/8] Verifying build >> "%BUILD_LOG%"
 
 if not exist "%DIST_DIR%\%APP_NAME%.exe" (
     echo [ERROR] Plik .exe nie został utworzony!
