@@ -1,0 +1,67 @@
+{
+  "model": {
+    "path": "data/models/best.onnx",
+    "imgsz": 640,
+    "classes": ["crate"],
+    "confidence_threshold": 0.5,
+    "nms_threshold": 0.45,
+    "max_detections_per_frame": 50
+  },
+  "capture": {
+    "method": "mss",
+    "fps": 60,
+    "region": null,
+    "monitor": 0
+  },
+  "inference": {
+    "enabled": true,
+    "fps": 30,
+    "skip_frames": 1,
+    "use_gpu": true,
+    "gpu_device": "DirectML",
+    "batch_size": 1
+  },
+  "stabilization": {
+    "enabled": true,
+    "ema_alpha": 0.7,
+    "iou_threshold": 0.5,
+    "ttl_frames": 5,
+    "min_box_size": 20
+  },
+  "overlay": {
+    "enabled": true,
+    "show_boxes": true,
+    "show_labels": true,
+    "show_confidence": true,
+    "show_center_dot": true,
+    "box_thickness": 2,
+    "font_scale": 0.6,
+    "colors": {
+      "high_confidence": [0, 255, 0],
+      "medium_confidence": [255, 255, 0],
+      "low_confidence": [255, 165, 0]
+    },
+    "confidence_thresholds": {
+      "high": 0.8,
+      "medium": 0.6
+    }
+  },
+  "hotkeys": {
+    "toggle_overlay": "F9",
+    "toggle_detection": "F10",
+    "increase_confidence": "F11",
+    "decrease_confidence": "F12",
+    "quit": "ctrl+q"
+  },
+  "performance": {
+    "async_inference": true,
+    "thread_count": 16,
+    "cpu_model": "AMD Ryzen 7 5700X3D",
+    "gpu_model": "AMD Radeon RX 7900 GRE"
+  },
+  "debug": {
+    "show_fps": true,
+    "show_detection_count": true,
+    "log_level": "INFO"
+  }
+}
