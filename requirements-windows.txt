@@ -4,7 +4,7 @@
 # Core ML and Computer Vision
 ultralytics>=8.0.0
 opencv-python>=4.8.0
-numpy>=1.24.0,<2.0.0  # Używamy starszej wersji z dostępnymi wheels
+# numpy - instalowane osobno w build.cmd (krok 3)
 onnx>=1.14.0
 
 # ONNX Runtime - AMD GPU Support (RX 7900 GRE)
