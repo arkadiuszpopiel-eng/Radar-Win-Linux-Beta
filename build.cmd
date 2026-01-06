@@ -120,8 +120,14 @@ echo [%date% %time%] [4/7] Installing other dependencies >> "%BUILD_LOG%"
 echo To może zająć kilka minut przy pierwszym uruchomieniu...
 echo.
 
-REM Użyj requirements-windows.txt dla Windows (lepsze dla kompilacji)
-if exist "requirements-windows.txt" (
+REM Użyj requirements-build.txt (tylko pakiety potrzebne do buildu)
+if exist "requirements-build.txt" (
+    echo Instalowanie requirements-build.txt (minimum dla buildu)...
+    echo UWAGA: Ultralytics i PyTorch NIE są instalowane (potrzebne tylko do treningu)
+    echo Jeśli chcesz trenować model, uruchom: install_deps.cmd
+    echo.
+    %PYTHON_CMD% -m pip install -r requirements-build.txt >> "%BUILD_LOG%" 2>&1
+) else if exist "requirements-windows.txt" (
     echo Instalowanie requirements-windows.txt (Windows)...
     %PYTHON_CMD% -m pip install -r requirements-windows.txt >> "%BUILD_LOG%" 2>&1
 ) else (
@@ -144,12 +150,13 @@ REM ====================================================================
 echo [5/8] Weryfikuję instalację...
 echo [%date% %time%] [5/8] Verifying installation >> "%BUILD_LOG%"
 
-%PYTHON_CMD% -c "import numpy; import torch; import cv2; import onnxruntime; import PyQt5" >nul 2>&1
+%PYTHON_CMD% -c "import numpy; import cv2; import onnxruntime; import PyQt5; import mss" >nul 2>&1
 if errorlevel 1 (
     echo [WARNING] Niektóre pakiety mogą nie być zainstalowane poprawnie
     echo Kontynuuję...
 ) else (
-    echo [OK] Wszystkie pakiety zainstalowane
+    echo [OK] Wszystkie pakiety podstawowe zainstalowane
+    echo (PyTorch/Ultralytics - tylko do treningu, nie wymagane do buildu)
 )
 echo.
 
@@ -190,7 +197,6 @@ echo.
     --hidden-import=onnxruntime ^
     --hidden-import=mss ^
     --hidden-import=keyboard ^
-    --hidden-import=ultralytics ^
     --collect-all=onnxruntime ^
     --collect-all=PyQt5 ^
     --noconfirm ^

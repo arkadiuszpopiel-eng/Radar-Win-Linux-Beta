@@ -1,0 +1,24 @@
+# Requirements TYLKO dla buildu .exe (minimum)
+# Ultralytics i PyTorch są potrzebne TYLKO do treningu, nie do uruchomienia .exe
+
+# numpy - instalowane osobno w build.cmd (krok 3)
+
+# Core - potrzebne do działania aplikacji
+opencv-python>=4.8.0
+onnxruntime-directml>=1.16.0
+
+# GUI i Overlay
+PyQt5>=5.15.0
+pywin32>=306
+
+# Screen Capture
+mss>=9.0.0
+pillow>=10.0.0
+
+# Utilities
+keyboard>=0.13.5
+psutil>=5.9.0
+pyyaml>=6.0
+
+# Build Tools
+pyinstaller>=6.0.0
