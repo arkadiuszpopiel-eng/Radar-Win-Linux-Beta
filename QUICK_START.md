@@ -4,6 +4,20 @@ Skrócona instrukcja szybkiego uruchomienia systemu.
 
 ## ⚡ Szybka Instalacja (5 min)
 
+### Windows:
+
+```cmd
+REM 1. Sklonuj / pobierz repozytorium
+
+REM 2. Zainstaluj zależności (automatyczny fix dla numpy)
+install_deps.cmd
+
+REM 3. Utwórz katalogi
+python -c "import os; [os.makedirs(d, exist_ok=True) for d in ['data/raw', 'data/labeled/images/train', 'data/labeled/images/val', 'data/labeled/labels/train', 'data/labeled/labels/val', 'data/models', 'runs']]"
+```
+
+### Linux/Mac:
+
 ```bash
 # 1. Sklonuj / pobierz repozytorium
 
@@ -13,6 +27,8 @@ pip install -r requirements.txt
 # 3. Utwórz katalogi
 python -c "import os; [os.makedirs(d, exist_ok=True) for d in ['data/raw', 'data/labeled/images/train', 'data/labeled/images/val', 'data/labeled/labels/train', 'data/labeled/labels/val', 'data/models', 'runs']]"
 ```
+
+**⚠️ UWAGA:** Jeśli masz problemy z instalacją numpy, zobacz [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md)
 
 ## 📸 Krok 1: Zbierz Dataset (30-60 min)
 

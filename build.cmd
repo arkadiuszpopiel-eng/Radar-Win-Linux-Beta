@@ -69,10 +69,29 @@ REM ====================================================================
 echo [3/6] Instaluję zależności...
 echo [%date% %time%] [3/6] Installing dependencies >> "%BUILD_LOG%"
 
-echo Instalowanie requirements.txt...
-pip install -r requirements.txt >> "%BUILD_LOG%" 2>&1
+REM Użyj requirements-windows.txt dla Windows (lepsze dla kompilacji)
+if exist "requirements-windows.txt" (
+    echo Instalowanie requirements-windows.txt (Windows-specific)...
+    pip install -r requirements-windows.txt >> "%BUILD_LOG%" 2>&1
+) else (
+    echo Instalowanie requirements.txt...
+    pip install -r requirements.txt >> "%BUILD_LOG%" 2>&1
+)
+
 if errorlevel 1 (
     echo [ERROR] Błąd podczas instalacji zależności!
+    echo.
+    echo MOŻLIWE ROZWIĄZANIA:
+    echo 1. Zainstaluj Microsoft Visual Studio Build Tools
+    echo    https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022
+    echo.
+    echo 2. Lub użyj stabilnej wersji Python (3.11 lub 3.12)
+    echo    https://www.python.org/downloads/
+    echo.
+    echo 3. Lub zainstaluj pakiety ręcznie:
+    echo    pip install numpy==1.26.4
+    echo    pip install -r requirements-windows.txt
+    echo.
     echo [%date% %time%] [ERROR] Failed to install dependencies >> "%BUILD_LOG%"
     goto :error
 )

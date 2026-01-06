@@ -9,19 +9,58 @@ Instrukcje kompilacji aplikacji YOLO Object Detection do pliku .exe.
 - **pip** zainstalowany
 - **git** (opcjonalnie)
 
+## ⚠️ WAŻNE - Przed Kompilacją!
+
+### Problem z NumPy i Python 3.15
+
+Jeśli używasz **Python 3.15** (alpha/beta) lub widzisz błąd kompilacji NumPy:
+
+```
+ERROR: Unknown compiler(s): [['cl'], ['gcc'], ['clang']]
+```
+
+**ROZWIĄZANIE - Wybierz jedno:**
+
+#### Opcja 1: Użyj skryptu instalacyjnego (ZALECANE)
+
+```cmd
+install_deps.cmd
+```
+
+Ten skrypt:
+- ✅ Instaluje prekompilowany NumPy
+- ✅ Rozwiązuje problemy z kompilatorami
+- ✅ Instaluje wszystkie zależności poprawnie
+
+#### Opcja 2: Zainstaluj Visual Studio Build Tools
+
+1. Pobierz: https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022
+2. Zainstaluj "Desktop development with C++"
+3. Uruchom ponownie `build.cmd`
+
+#### Opcja 3: Downgrade Python (najbardziej stabilne)
+
+Użyj stabilnej wersji:
+- **Python 3.11.x** - https://www.python.org/downloads/
+- **Python 3.12.x** - https://www.python.org/downloads/
+
 ## 🚀 Szybka Kompilacja
 
 ### Metoda 1: Automatyczny Build (Zalecane)
 
-Uruchom skrypt build:
+**KROK 1:** Najpierw zainstaluj zależności:
+```cmd
+install_deps.cmd
+```
 
+**KROK 2:** Skompiluj aplikację:
 ```cmd
 build.cmd
 ```
 
-**Co robi skrypt:**
+**Co robi build.cmd:**
 1. ✅ Sprawdza instalację Python i pip
-2. ✅ Instaluje wszystkie zależności z `requirements.txt`
+2. ✅ Używa `requirements-windows.txt` (z prekompilowanymi pakietami)
 3. ✅ Czyści poprzednie buildy
 4. ✅ Kompiluje aplikację do .exe
 5. ✅ Zapisuje logi do `logs/build_*.log`
