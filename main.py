@@ -24,6 +24,7 @@ from PyQt5.QtCore import QTimer
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from src.utils.config import Config
+from src.utils.logger import get_logger
 from src.utils.hotkey_manager import HotkeyManager
 from src.capture.screen_capture import ScreenCapture
 from src.detection.yolo_detector import YOLODetector
@@ -40,14 +41,17 @@ class YOLODetectionApp:
         Args:
             config_path: Ścieżka do pliku konfiguracyjnego.
         """
-        print("=" * 70)
-        print("YOLO OBJECT DETECTION - System wykrywania obiektów".center(70))
-        print("=" * 70)
-        print()
+        # Inicjalizuj logger
+        self.logger = get_logger()
+
+        self.logger.info("=" * 70)
+        self.logger.info("YOLO OBJECT DETECTION - System wykrywania obiektów".center(70))
+        self.logger.info("=" * 70)
 
         # Załaduj konfigurację
         self.config = Config(config_path)
-        print("✓ Załadowano konfigurację")
+        self.logger.info("✓ Załadowano konfigurację")
+        self.logger.debug(f"Ścieżka config: {config_path or 'default'}")
 
         # Flagi stanu
         self.running = False

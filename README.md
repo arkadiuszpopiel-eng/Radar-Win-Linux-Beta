@@ -203,6 +203,35 @@ python main.py
 python main.py --config my_config.json
 ```
 
+## 🔨 Kompilacja do .exe
+
+Jeśli chcesz skompilować aplikację do samodzielnego pliku .exe:
+
+### Szybka kompilacja:
+
+```cmd
+build.cmd
+```
+
+Skrypt automatycznie:
+- ✅ Sprawdzi Python i pip
+- ✅ Zainstaluje zależności
+- ✅ Skompiluje do .exe
+- ✅ Zapisze logi buildu w `logs/`
+
+**Wynik:** `dist/YOLODetection.exe`
+
+### Alternatywna metoda:
+
+```cmd
+build_simple.cmd
+```
+
+**Czas kompilacji:** 5-10 minut
+**Rozmiar .exe:** ~500-800 MB
+
+📖 **Więcej informacji:** Zobacz [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md)
+
 ## ⌨️ Sterowanie
 
 | Klawisz | Akcja |
