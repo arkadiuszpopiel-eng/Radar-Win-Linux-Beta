@@ -1,20 +1,15 @@
 @echo off
 REM ====================================================================
-REM YOLO Object Detection - Build Script
+REM YOLO Object Detection - Universal Build Script
 REM Kompilacja aplikacji do pliku .exe
+REM Automatycznie wykrywa najlepszą wersję Python i instaluje zależności
 REM ====================================================================
 
 setlocal enabledelayedexpansion
 
 echo ====================================================================
-echo YOLO OBJECT DETECTION - BUILD SCRIPT
+echo YOLO OBJECT DETECTION - UNIVERSAL BUILD SCRIPT
 echo ====================================================================
-echo.
-echo UWAGA: Jesli to pierwsze uruchomienie, najpierw uruchom:
-echo        install_deps.cmd
-echo.
-echo Kontynuowanie za 3 sekundy...
-timeout /t 3 >nul
 echo.
 
 REM Ustawienia
@@ -24,89 +19,115 @@ set "LOG_DIR=logs"
 set "BUILD_LOG=%LOG_DIR%\build_%date:~-4,4%%date:~-7,2%%date:~-10,2%_%time:~0,2%%time:~3,2%%time:~6,2%.log"
 set "APP_NAME=YOLODetection"
 set "VERSION=1.0.0"
+set "PYTHON_CMD="
 
 REM Utwórz katalog logów
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 
 REM Rozpocznij logowanie
 echo [%date% %time%] Build started > "%BUILD_LOG%"
-echo [%date% %time%] Build started
-echo.
 
 REM ====================================================================
-REM KROK 1: Sprawdź Python
+REM KROK 1: Znajdź najlepszą wersję Python
 REM ====================================================================
-echo [1/6] Sprawdzam instalację Python...
-echo [%date% %time%] [1/6] Checking Python installation >> "%BUILD_LOG%"
+echo [1/7] Wyszukiwanie najlepszej wersji Python...
+echo [%date% %time%] [1/7] Finding best Python version >> "%BUILD_LOG%"
+echo.
+
+REM Priorytet: 3.11 -> 3.12 -> 3.10 -> py -> python
+py -3.11 --version >nul 2>&1
+if not errorlevel 1 (
+    set "PYTHON_CMD=py -3.11"
+    goto :python_found
+)
+
+py -3.12 --version >nul 2>&1
+if not errorlevel 1 (
+    set "PYTHON_CMD=py -3.12"
+    goto :python_found
+)
+
+py -3.10 --version >nul 2>&1
+if not errorlevel 1 (
+    set "PYTHON_CMD=py -3.10"
+    goto :python_found
+)
+
+py --version >nul 2>&1
+if not errorlevel 1 (
+    set "PYTHON_CMD=py"
+    goto :python_found
+)
 
 python --version >nul 2>&1
-if errorlevel 1 (
-    echo [ERROR] Python nie jest zainstalowany lub nie jest w PATH!
-    echo [%date% %time%] [ERROR] Python not found >> "%BUILD_LOG%"
-    goto :error
+if not errorlevel 1 (
+    set "PYTHON_CMD=python"
+    goto :python_found
 )
 
-python --version
-python --version >> "%BUILD_LOG%"
-echo [OK] Python znaleziony
+REM Nie znaleziono Python
+echo [ERROR] Python nie jest zainstalowany!
+echo.
+echo Zainstaluj Python z: https://www.python.org/downloads/
+echo Zalecane: Python 3.11.9
+echo.
+echo [%date% %time%] [ERROR] Python not found >> "%BUILD_LOG%"
+pause
+goto :error
+
+:python_found
+echo Znaleziono Python:
+%PYTHON_CMD% --version
+%PYTHON_CMD% --version >> "%BUILD_LOG%"
+echo [OK] Używam: %PYTHON_CMD%
+echo [%date% %time%] Using: %PYTHON_CMD% >> "%BUILD_LOG%"
 echo.
 
 REM ====================================================================
-REM KROK 2: Sprawdź pip
+REM KROK 2: Upgrade pip
 REM ====================================================================
-echo [2/6] Sprawdzam pip...
-echo [%date% %time%] [2/6] Checking pip >> "%BUILD_LOG%"
+echo [2/7] Aktualizuję pip...
+echo [%date% %time%] [2/7] Upgrading pip >> "%BUILD_LOG%"
 
-pip --version >nul 2>&1
-if errorlevel 1 (
-    echo [ERROR] pip nie jest zainstalowany!
-    echo [%date% %time%] [ERROR] pip not found >> "%BUILD_LOG%"
-    goto :error
-)
-
-pip --version
-pip --version >> "%BUILD_LOG%"
-echo [OK] pip znaleziony
+%PYTHON_CMD% -m pip install --upgrade pip >> "%BUILD_LOG%" 2>&1
+echo [OK] pip zaktualizowany
 echo.
 
 REM ====================================================================
 REM KROK 3: Instaluj zależności
 REM ====================================================================
-echo [3/6] Instaluję zależności...
-echo [%date% %time%] [3/6] Installing dependencies >> "%BUILD_LOG%"
+echo [3/7] Instaluję zależności...
+echo [%date% %time%] [3/7] Installing dependencies >> "%BUILD_LOG%"
+echo To może zająć kilka minut przy pierwszym uruchomieniu...
+echo.
 
 REM Użyj requirements-windows.txt dla Windows (lepsze dla kompilacji)
 if exist "requirements-windows.txt" (
-    echo Instalowanie requirements-windows.txt (Windows-specific)...
-    pip install -r requirements-windows.txt >> "%BUILD_LOG%" 2>&1
+    echo Instalowanie requirements-windows.txt (Windows)...
+    %PYTHON_CMD% -m pip install -r requirements-windows.txt >> "%BUILD_LOG%" 2>&1
 ) else (
     echo Instalowanie requirements.txt...
-    pip install -r requirements.txt >> "%BUILD_LOG%" 2>&1
+    %PYTHON_CMD% -m pip install -r requirements.txt >> "%BUILD_LOG%" 2>&1
 )
 
 if errorlevel 1 (
     echo [ERROR] Błąd podczas instalacji zależności!
     echo.
-    echo NAJPIERW URUCHOM: install_deps.cmd
-    echo.
     echo MOŻLIWE ROZWIĄZANIA:
-    echo 1. Użyj skryptu instalacyjnego (ZALECANE):
-    echo    install_deps.cmd
     echo.
-    echo 2. Zainstaluj Microsoft Visual Studio Build Tools
-    echo    https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022
+    echo 1. Zainstaluj numpy ręcznie:
+    echo    %PYTHON_CMD% -m pip install numpy==1.26.4
     echo.
-    echo 3. Lub użyj stabilnej wersji Python (3.11 lub 3.12)
+    echo 2. Zainstaluj Visual Studio Build Tools:
+    echo    https://visualstudio.microsoft.com/downloads/
+    echo.
+    echo 3. Użyj Python 3.11 lub 3.12 (najbardziej stabilne)
     echo    https://www.python.org/downloads/
     echo.
-    echo 4. Lub zainstaluj pakiety ręcznie:
-    echo    pip install numpy==1.26.4
-    echo    pip install -r requirements-windows.txt
+    echo Sprawdź szczegóły w: %BUILD_LOG%
     echo.
     echo [%date% %time%] [ERROR] Failed to install dependencies >> "%BUILD_LOG%"
-    echo.
-    echo Naciśnij dowolny klawisz aby zobaczyć szczegóły błędu...
-    pause >nul
+    pause
     goto :error
 )
 
@@ -114,46 +135,52 @@ echo [OK] Zależności zainstalowane
 echo.
 
 REM ====================================================================
-REM KROK 4: Wyczyść poprzednie buildy
+REM KROK 4: Weryfikacja instalacji
 REM ====================================================================
-echo [4/6] Czyszczę poprzednie buildy...
-echo [%date% %time%] [4/6] Cleaning previous builds >> "%BUILD_LOG%"
+echo [4/7] Weryfikuję instalację...
+echo [%date% %time%] [4/7] Verifying installation >> "%BUILD_LOG%"
 
-if exist "%BUILD_DIR%" (
-    echo Usuwam katalog build...
-    rmdir /s /q "%BUILD_DIR%" >> "%BUILD_LOG%" 2>&1
+%PYTHON_CMD% -c "import numpy; import torch; import cv2; import onnxruntime; import PyQt5" >nul 2>&1
+if errorlevel 1 (
+    echo [WARNING] Niektóre pakiety mogą nie być zainstalowane poprawnie
+    echo Kontynuuję...
+) else (
+    echo [OK] Wszystkie pakiety zainstalowane
 )
+echo.
 
-if exist "%DIST_DIR%" (
-    echo Usuwam katalog dist...
-    rmdir /s /q "%DIST_DIR%" >> "%BUILD_LOG%" 2>&1
-)
+REM ====================================================================
+REM KROK 5: Wyczyść poprzednie buildy
+REM ====================================================================
+echo [5/7] Czyszczę poprzednie buildy...
+echo [%date% %time%] [5/7] Cleaning previous builds >> "%BUILD_LOG%"
 
-if exist "*.spec" (
-    echo Usuwam pliki .spec...
-    del /q *.spec >> "%BUILD_LOG%" 2>&1
-)
+if exist "%BUILD_DIR%" rmdir /s /q "%BUILD_DIR%" 2>nul
+if exist "%DIST_DIR%" rmdir /s /q "%DIST_DIR%" 2>nul
+if exist "*.spec" del /q *.spec 2>nul
 
 echo [OK] Poprzednie buildy wyczyszczone
 echo.
 
 REM ====================================================================
-REM KROK 5: Kompiluj z PyInstaller
+REM KROK 6: Kompiluj z PyInstaller
 REM ====================================================================
-echo [5/6] Kompiluję aplikację do .exe...
-echo [%date% %time%] [5/6] Building with PyInstaller >> "%BUILD_LOG%"
-echo To może zająć kilka minut...
+echo [6/7] Kompiluję aplikację do .exe...
+echo [%date% %time%] [6/7] Building with PyInstaller >> "%BUILD_LOG%"
+echo To może zająć 5-10 minut...
 echo.
 
-pyinstaller ^
+%PYTHON_CMD% -m PyInstaller ^
     --name=%APP_NAME% ^
     --onefile ^
-    --windowed ^
-    --icon=NONE ^
+    --console ^
     --add-data="config;config" ^
     --add-data="data/classes.txt;data" ^
     --add-data="data/dataset.yaml;data" ^
     --hidden-import=PyQt5 ^
+    --hidden-import=PyQt5.QtCore ^
+    --hidden-import=PyQt5.QtGui ^
+    --hidden-import=PyQt5.QtWidgets ^
     --hidden-import=cv2 ^
     --hidden-import=numpy ^
     --hidden-import=onnxruntime ^
@@ -168,7 +195,10 @@ pyinstaller ^
 
 if errorlevel 1 (
     echo [ERROR] Błąd podczas kompilacji!
+    echo Sprawdź logi: %BUILD_LOG%
+    echo.
     echo [%date% %time%] [ERROR] PyInstaller failed >> "%BUILD_LOG%"
+    pause
     goto :error
 )
 
@@ -176,14 +206,17 @@ echo [OK] Kompilacja zakończona
 echo.
 
 REM ====================================================================
-REM KROK 6: Sprawdź wynik
+REM KROK 7: Sprawdź wynik
 REM ====================================================================
-echo [6/6] Sprawdzam wynik...
-echo [%date% %time%] [6/6] Verifying build >> "%BUILD_LOG%"
+echo [7/7] Sprawdzam wynik...
+echo [%date% %time%] [7/7] Verifying build >> "%BUILD_LOG%"
 
 if not exist "%DIST_DIR%\%APP_NAME%.exe" (
     echo [ERROR] Plik .exe nie został utworzony!
+    echo Sprawdź logi: %BUILD_LOG%
+    echo.
     echo [%date% %time%] [ERROR] .exe file not created >> "%BUILD_LOG%"
+    pause
     goto :error
 )
 
@@ -191,7 +224,7 @@ echo [OK] Plik .exe utworzony
 echo.
 
 REM ====================================================================
-REM Informacje o wyniku
+REM Sukces
 REM ====================================================================
 echo ====================================================================
 echo BUILD ZAKOŃCZONY POMYŚLNIE!
@@ -203,9 +236,9 @@ echo.
 dir "%DIST_DIR%\%APP_NAME%.exe" | find ".exe"
 
 echo.
-echo Logi buildu zapisane w: %BUILD_LOG%
+echo Logi buildu: %BUILD_LOG%
 echo.
-echo Aby uruchomić aplikację:
+echo Aby uruchomić:
 echo   cd %DIST_DIR%
 echo   %APP_NAME%.exe
 echo.
@@ -214,7 +247,8 @@ echo ====================================================================
 echo [%date% %time%] Build completed successfully >> "%BUILD_LOG%"
 echo [%date% %time%] Output: %DIST_DIR%\%APP_NAME%.exe >> "%BUILD_LOG%"
 
-goto :end
+pause
+exit /b 0
 
 REM ====================================================================
 REM Obsługa błędów
@@ -230,11 +264,3 @@ echo.
 echo [%date% %time%] Build failed >> "%BUILD_LOG%"
 pause
 exit /b 1
-
-REM ====================================================================
-REM Koniec
-REM ====================================================================
-:end
-echo Naciśnij dowolny klawisz aby zakończyć...
-pause >nul
-exit /b 0

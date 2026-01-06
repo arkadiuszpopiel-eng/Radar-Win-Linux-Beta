@@ -46,35 +46,34 @@ Użyj stabilnej wersji:
 
 ## 🚀 Szybka Kompilacja
 
-### Metoda 1: Automatyczny Build (Zalecane)
+### Jeden skrypt robi wszystko!
 
-**KROK 1:** Najpierw zainstaluj zależności:
-```cmd
-install_deps.cmd
-```
-
-**KROK 2:** Skompiluj aplikację:
 ```cmd
 build.cmd
 ```
 
-**Co robi build.cmd:**
-1. ✅ Sprawdza instalację Python i pip
-2. ✅ Używa `requirements-windows.txt` (z prekompilowanymi pakietami)
-3. ✅ Czyści poprzednie buildy
-4. ✅ Kompiluje aplikację do .exe
-5. ✅ Zapisuje logi do `logs/build_*.log`
-6. ✅ Weryfikuje wynik
+**Co robi:**
+1. ✅ Automatycznie znajduje najlepszą wersję Python (priorytet 3.11)
+2. ✅ Aktualizuje pip
+3. ✅ Instaluje wszystkie zależności
+4. ✅ Weryfikuje instalację pakietów
+5. ✅ Czyści poprzednie buildy
+6. ✅ Kompiluje aplikację do .exe
+7. ✅ Zapisuje logi do `logs/build_*.log`
 
-**Czas kompilacji:** 5-10 minut (zależnie od sprzętu)
+**Czas kompilacji:**
+- Pierwsze uruchomienie: 5-10 minut
+- Kolejne: 3-5 minut
 
-### Metoda 2: Simple Build (z plikiem .spec)
+### Opcjonalnie: Instalacja zależności osobno
+
+Jeśli chcesz tylko zainstalować zależności bez kompilacji:
 
 ```cmd
-build_simple.cmd
+install_deps.cmd
 ```
 
-Używa predefiniowanego pliku `YOLODetection.spec`.
+Ten skrypt tylko instaluje pakiety (nie kompiluje).
 
 ## 📂 Wynik Kompilacji
 
